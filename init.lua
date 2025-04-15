@@ -236,6 +236,15 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'toml',
+  callback = function()
+    vim.opt_local.shiftwidth = 4
+    vim.opt_local.tabstop = 4
+    vim.opt_local.softtabstop = 4
+    vim.opt_local.expandtab = true
+  end,
+})
 
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
@@ -620,7 +629,23 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         pyright = {},
-        rust_analyzer = {},
+        rust_analyzer = {
+          settings = {
+            ['rust-analyzer'] = {
+              checkOnSave = { command = 'clippy' },
+              files = { excludeDirs = { '.venv', 'node_modules' } },
+            },
+          },
+        },
+        pyright = {
+          settings = {
+            python = {
+              venvPath = '.venv',
+              pythonPath = '.venv/bin/python',
+              analysis = { diagnosticMode = 'off', typeCheckingMode = 'off' },
+            },
+          },
+        },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -918,22 +943,24 @@ require('lazy').setup({
       vim.keymap.set('n', '<C-e>', function()
         harpoon.ui:toggle_quick_menu(harpoon:list())
       end, { desc = 'Harpoon: Toggle menu' })
-      vim.keymap.set('n', '<C-h>', function()
+
+      vim.keymap.set('n', '<C-1>', function()
         harpoon:list():select(1)
       end, { desc = 'Harpoon: Select file 1' })
-      vim.keymap.set('n', '<C-t>', function()
+
+      vim.keymap.set('n', '<C-2>', function()
         harpoon:list():select(2)
       end, { desc = 'Harpoon: Select file 2' })
-      vim.keymap.set('n', '<C-n>', function()
+      vim.keymap.set('n', '<C-3>', function()
         harpoon:list():select(3)
       end, { desc = 'Harpoon: Select file 3' })
-      vim.keymap.set('n', '<C-s>', function()
+      vim.keymap.set('n', '<C-4>', function()
         harpoon:list():select(4)
       end, { desc = 'Harpoon: Select file 4' })
-      vim.keymap.set('n', '<C-S-P>', function()
+      vim.keymap.set('n', '<C-p>', function()
         harpoon:list():prev()
       end, { desc = 'Harpoon: Previous' })
-      vim.keymap.set('n', '<C-S-N>', function()
+      vim.keymap.set('n', '<C-n>', function()
         harpoon:list():next()
       end, { desc = 'Harpoon: Next' })
     end,
