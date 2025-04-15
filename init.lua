@@ -236,6 +236,15 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'toml',
+  callback = function()
+    vim.opt_local.shiftwidth = 4
+    vim.opt_local.tabstop = 4
+    vim.opt_local.softtabstop = 4
+    vim.opt_local.expandtab = true
+  end,
+})
 
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
@@ -620,7 +629,23 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         pyright = {},
-        rust_analyzer = {},
+        rust_analyzer = {
+          settings = {
+            ['rust-analyzer'] = {
+              checkOnSave = { command = 'clippy' },
+              files = { excludeDirs = { '.venv', 'node_modules' } },
+            },
+          },
+        },
+        pyright = {
+          settings = {
+            python = {
+              venvPath = '.venv',
+              pythonPath = '.venv/bin/python',
+              analysis = { diagnosticMode = 'off', typeCheckingMode = 'off' },
+            },
+          },
+        },
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -665,7 +690,7 @@ require('lazy').setup({
         'matlab-language-server',
         'prettier',
         'black',
-        'rust-analyzer'
+        'rust-analyzer',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -711,12 +736,10 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        --
-        -- You can use a sub-list to tell conform to run *until* a formatter
-        -- is found.
-        python = { { "flake8", "black" } },
-        javascript = { { "prettierd", "prettier" } },
+        python = { 'flake8', 'black' },
+        javascript = { 'prettierd', 'prettier' },
       },
+      stop_after_first_successful = true,
     },
   },
 
@@ -905,6 +928,41 @@ require('lazy').setup({
       --    - Incremental selection: Included, see `:help nvim-treesitter-incremental-selection-mod`
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
+    end,
+  },
+  {
+    'ThePrimeagen/harpoon',
+    branch = 'harpoon2',
+    dependencies = { 'nvim-lua/plenary.nvim' },
+    config = function()
+      local harpoon = require 'harpoon'
+      harpoon:setup()
+      vim.keymap.set('n', '<leader>a', function()
+        harpoon:list():add()
+      end, { desc = 'Harpoon: Add file' })
+      vim.keymap.set('n', '<C-e>', function()
+        harpoon.ui:toggle_quick_menu(harpoon:list())
+      end, { desc = 'Harpoon: Toggle menu' })
+
+      vim.keymap.set('n', '<C-1>', function()
+        harpoon:list():select(1)
+      end, { desc = 'Harpoon: Select file 1' })
+
+      vim.keymap.set('n', '<C-2>', function()
+        harpoon:list():select(2)
+      end, { desc = 'Harpoon: Select file 2' })
+      vim.keymap.set('n', '<C-3>', function()
+        harpoon:list():select(3)
+      end, { desc = 'Harpoon: Select file 3' })
+      vim.keymap.set('n', '<C-4>', function()
+        harpoon:list():select(4)
+      end, { desc = 'Harpoon: Select file 4' })
+      vim.keymap.set('n', '<C-p>', function()
+        harpoon:list():prev()
+      end, { desc = 'Harpoon: Previous' })
+      vim.keymap.set('n', '<C-n>', function()
+        harpoon:list():next()
+      end, { desc = 'Harpoon: Next' })
     end,
   },
 
