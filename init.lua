@@ -1,3 +1,5 @@
+--
+--
 --[[
 
 =====================================================================
@@ -87,16 +89,38 @@ P.S. You can delete this when you're done too. It's your config now! :)
 -- Set <space> as the leader key
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
+--
+
+-- detect project venv properly
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    local cwd = vim.fn.getcwd()
+    local venv_path = cwd .. '/.venv/bin/python'
+    if vim.fn.executable(venv_path) == 1 then
+      vim.g.python3_host_prog = venv_path
+      vim.env.VIRTUAL_ENV = cwd .. '/.venv'
+      vim.env.PATH = cwd .. '/.venv/bin:' .. vim.env.PATH
+    end
+  end,
+})
+
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
 -- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+vim.g.have_nerd_font = True
 
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
 --  For more options, you can see `:help option-list`
+--
+-- Enable tree-sitter folds globally
+vim.o.foldmethod = 'expr'
+vim.o.foldexpr = 'nvim_treesitter#foldexpr()'
+vim.o.foldenable = true
+vim.o.foldlevel = 99
+vim.o.foldlevelstart = 99
 
 -- Make line numbers default
 vim.opt.number = true
@@ -194,6 +218,9 @@ vim.keymap.set('n', '<C-f>', '<cmd>! tmux-sessionizer .<CR>')
 vim.keymap.set('n', '<leader>Gor', '<cmd>silent e $DOTS')
 vim.keymap.set('n', '<leader>Got', '<cmd>silent e ~/config/tmux/<CR>')
 
+vim.keymap.set('n', '<leader>zo', 'zR', { desc = 'Open all folds' })
+vim.keymap.set('n', '<leader>zc', 'zM', { desc = 'Close all folds' })
+
 -- [[ Basic Keymaps ]] ----------------------------------------------
 --  See `:help vim.keymap.set()`
 
@@ -201,13 +228,13 @@ vim.keymap.set('n', '<leader>Got', '<cmd>silent e ~/config/tmux/<CR>')
 vim.opt.hlsearch = true
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
--- Diagnostic keymaps
+-- Diagnostic keymaps (PyCharm style: gn/gp for next/previous error)
 vim.keymap.set('n', 'gp', function()
-  vim.diagnostic.jump { count = -1, float = true } { desc = 'Go to previous [D]iagnostic message' }
-end)
+  vim.diagnostic.jump { count = -1, float = true }
+end, { desc = 'Go to [P]revious diagnostic' })
 vim.keymap.set('n', 'gn', function()
-  vim.diagnostic.jump { count = 1, float = true } { desc = 'Go to next [D]iagnostic message' }
-end)
+  vim.diagnostic.jump { count = 1, float = true }
+end, { desc = 'Go to [N]ext diagnostic' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
@@ -568,10 +595,6 @@ require('lazy').setup({
           --  For example, in C this would take you to the header.
           map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
-          -- The following two autocommands are used to highlight references of the
-          -- word under your cursor when your cursor rests there for a little while.
-          --    See `:help CursorHold` for information about when this is executed
-          --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
           local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client.server_capabilities.documentHighlightProvider then
@@ -613,8 +636,16 @@ require('lazy').setup({
       --  By default, Neovim doesn't support everything that is in the LSP specification.
       --  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
       --  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
+      --
+      -- capabilities block (replace your current one)
       local capabilities = vim.lsp.protocol.make_client_capabilities()
+      capabilities.offsetEncoding = { 'utf-8' }
       capabilities = vim.tbl_deep_extend('force', capabilities, require('cmp_nvim_lsp').default_capabilities())
+
+      -- force all LSPs to advertise utf-8 encoding
+      require('lspconfig').util.default_config = vim.tbl_extend('force', require('lspconfig').util.default_config, {
+        capabilities = capabilities,
+      })
 
       -- Enable the following language servers
       --  Feel free to add/remove any LSPs that you want here. They will automatically be installed.
@@ -628,21 +659,13 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        pyright = {},
+        -- NOTE: pyright removed - using ty (Astral's type checker) instead
+        -- ty is configured in lua/custom/plugins/ty.lua
         rust_analyzer = {
           settings = {
             ['rust-analyzer'] = {
               checkOnSave = { command = 'clippy' },
               files = { excludeDirs = { '.venv', 'node_modules' } },
-            },
-          },
-        },
-        pyright = {
-          settings = {
-            python = {
-              venvPath = '.venv',
-              pythonPath = '.venv/bin/python',
-              analysis = { diagnosticMode = 'off', typeCheckingMode = 'off' },
             },
           },
         },
@@ -683,16 +706,22 @@ require('lazy').setup({
       -- for you, so that they are available from within Neovim.
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
-        'stylua', -- Used to format Lua code
-        'flake8',
-        'pyright',
+        -- Python: ty is installed via uv (not Mason)
+        -- 'ty' is configured in lua/custom/plugins/ty.lua
+        'ruff', -- Fast Python linter/formatter from Astral
+        'debugpy', -- Python debugger
+        -- Other tools
+        'stylua',
+        'prettier',
         'markdownlint',
         'matlab-language-server',
-        'prettier',
-        'black',
         'rust-analyzer',
       })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+      require('mason-tool-installer').setup {
+        ensure_installed = ensure_installed,
+        auto_update = true,
+        run_on_start = true,
+      }
 
       require('mason-lspconfig').setup {
         handlers = {
@@ -736,10 +765,10 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        python = { 'flake8', 'black' },
+        -- Use ruff for Python formatting (Astral toolchain)
+        python = { 'ruff_organize_imports', 'ruff_format' },
         javascript = { 'prettierd', 'prettier' },
       },
-      stop_after_first_successful = true,
     },
   },
 
@@ -929,6 +958,15 @@ require('lazy').setup({
       --    - Show your current context: https://github.com/nvim-treesitter/nvim-treesitter-context
       --    - Treesitter + textobjects: https://github.com/nvim-treesitter/nvim-treesitter-textobjects
     end,
+  },
+  {
+    'MeanderingProgrammer/render-markdown.nvim',
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, -- if you use the mini.nvim suite
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.icons' },        -- if you use standalone mini plugins
+    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+    ---@module 'render-markdown'
+    ---@type render.md.UserConfig
+    opts = {},
   },
   {
     'ThePrimeagen/harpoon',
