@@ -708,20 +708,26 @@ require('lazy').setup({
       -- Configure Python tools manually (installed via uv, not Mason)
       -- Install with: uv tool install ruff ty
 
-      -- ruff: linting and formatting
-      require('lspconfig').ruff.setup {
+      -- ruff: linting and formatting (using new vim.lsp API for Neovim 0.11+)
+      vim.lsp.config('ruff', {
+        cmd = { 'ruff', 'server' },
+        filetypes = { 'python' },
+        root_markers = { 'pyproject.toml', 'ruff.toml', '.ruff.toml', '.git' },
         capabilities = capabilities,
-      }
+      })
+      vim.lsp.enable('ruff')
 
       -- ty: full Python language server (go to definition, completions, hover, etc.)
-      require('lspconfig').ty.setup {
+      vim.lsp.config('ty', {
+        cmd = { 'ty', 'server' },
+        filetypes = { 'python' },
+        root_markers = { 'pyproject.toml', 'ty.toml', '.git' },
         capabilities = capabilities,
         settings = {
-          ty = {
-            -- ty settings go here if needed
-          },
+          ty = {},
         },
-      }
+      })
+      vim.lsp.enable('ty')
     end,
   },
 
