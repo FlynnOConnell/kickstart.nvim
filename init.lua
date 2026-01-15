@@ -714,6 +714,7 @@ require('lazy').setup({
         filetypes = { 'python' },
         root_markers = { 'pyproject.toml', 'ruff.toml', '.ruff.toml', '.git' },
         capabilities = capabilities,
+        offset_encoding = 'utf-16',
       })
       vim.lsp.enable('ruff')
 
@@ -723,6 +724,7 @@ require('lazy').setup({
         filetypes = { 'python' },
         root_markers = { 'pyproject.toml', 'ty.toml', '.git' },
         capabilities = capabilities,
+        offset_encoding = 'utf-16',
         settings = {
           ty = {},
         },
