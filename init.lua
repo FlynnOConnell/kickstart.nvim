@@ -93,6 +93,15 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
+-- Add ~/.local/bin to PATH for uv-installed tools (ruff, etc.)
+-- This works cross-platform (Windows, macOS, Linux)
+local home = vim.fn.expand('~')
+local local_bin = home .. '/.local/bin'
+if vim.fn.isdirectory(local_bin) == 1 then
+  local path_sep = vim.fn.has('win32') == 1 and ';' or ':'
+  vim.env.PATH = local_bin .. path_sep .. vim.env.PATH
+end
+
 -- [[ Setting options ]]
 -- See `:help vim.opt`
 -- NOTE: You can change these options as you wish!
@@ -676,7 +685,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
-        'ruff',   -- Python linter + formatter
+        -- ruff is installed via uv: uv tool install ruff
         'markdownlint',
         'matlab-language-server',
         'prettier',
