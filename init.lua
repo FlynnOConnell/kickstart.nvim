@@ -628,21 +628,13 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        pyright = {},
+        -- Using ruff for Python linting/formatting (replaces pyright, flake8, black)
+        ruff = {},
         rust_analyzer = {
           settings = {
             ['rust-analyzer'] = {
               checkOnSave = { command = 'clippy' },
               files = { excludeDirs = { '.venv', 'node_modules' } },
-            },
-          },
-        },
-        pyright = {
-          settings = {
-            python = {
-              venvPath = '.venv',
-              pythonPath = '.venv/bin/python',
-              analysis = { diagnosticMode = 'off', typeCheckingMode = 'off' },
             },
           },
         },
@@ -684,12 +676,10 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
-        'flake8',
-        'pyright',
+        'ruff',   -- Python linter + formatter (replaces flake8, black, isort)
         'markdownlint',
         'matlab-language-server',
         'prettier',
-        'black',
         'rust-analyzer',
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
