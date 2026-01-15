@@ -284,6 +284,48 @@ vim.api.nvim_create_autocmd('TextYankPost', {
   end,
 })
 
+-- Markdown: auto-continue lists and checkboxes on 'o' and Enter
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'markdown',
+  group = vim.api.nvim_create_augroup('markdown-list-continue', { clear = true }),
+  callback = function()
+    local function get_list_continuation()
+      local line = vim.api.nvim_get_current_line()
+      local checkbox = line:match '^(%s*- %[.%] )'
+      local bullet = line:match '^(%s*- )'
+      local numbered = line:match '^(%s*%d+%. )'
+      if checkbox then
+        return checkbox
+      elseif bullet then
+        return bullet
+      elseif numbered then
+        local num = tonumber(line:match '^%s*(%d+)') + 1
+        local indent = line:match '^(%s*)'
+        return indent .. num .. '. '
+      end
+      return nil
+    end
+
+    -- Normal mode 'o'
+    vim.keymap.set('n', 'o', function()
+      local cont = get_list_continuation()
+      if cont then
+        return 'o' .. cont
+      end
+      return 'o'
+    end, { buffer = true, expr = true })
+
+    -- Insert mode Enter
+    vim.keymap.set('i', '<CR>', function()
+      local cont = get_list_continuation()
+      if cont then
+        return '<CR>' .. cont
+      end
+      return '<CR>'
+    end, { buffer = true, expr = true })
+  end,
+})
+
 -- [[ Install `lazy.nvim` plugin manager ]]
 --    See `:help lazy.nvim.txt` or https://github.com/folke/lazy.nvim for more info
 local lazypath = vim.fn.stdpath 'data' .. '/lazy/lazy.nvim'
@@ -375,6 +417,8 @@ require('lazy').setup({
           { '<leader>t_', hidden = true },
           { '<leader>w', group = '[W]orkspace' },
           { '<leader>w_', hidden = true },
+          { '<leader>o', group = '[O]bsidian' },
+          { '<leader>o_', hidden = true },
         },
         -- visual mode
         {
@@ -961,12 +1005,58 @@ require('lazy').setup({
   },
   {
     'MeanderingProgrammer/render-markdown.nvim',
-    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, -- if you use the mini.nvim suite
-    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.icons' },        -- if you use standalone mini plugins
-    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
+    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' },
+    ft = { 'markdown', 'md' },
     ---@module 'render-markdown'
     ---@type render.md.UserConfig
-    opts = {},
+    opts = {
+      render_modes = { 'n', 'c' },
+      anti_conceal = { enabled = false },
+      heading = {
+        sign = false,
+        icons = {},
+        width = 'full',
+      },
+      code = {
+        sign = false,
+        style = 'full',
+        width = 'block',
+        border = 'thin',
+        left_pad = 2,
+        right_pad = 2,
+      },
+      bullet = {
+        icons = { '•', '◦', '‣', '⁃' },
+        left_pad = 0,
+        right_pad = 1,
+      },
+      indent = {
+        enabled = true,
+        per_level = 2,
+        skip_heading = true,
+      },
+      checkbox = {
+        unchecked = { icon = '☐ ' },
+        checked = { icon = '☑ ' },
+      },
+      pipe_table = {
+        style = 'full',
+      },
+      link = {
+        image = '󰥶 ',
+        hyperlink = '󰌹 ',
+      },
+    },
+  },
+  -- Live markdown preview in browser
+  {
+    'iamcco/markdown-preview.nvim',
+    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
+    ft = { 'markdown' },
+    build = 'cd app && npm install',
+    keys = {
+      { '<leader>mp', '<cmd>MarkdownPreviewToggle<cr>', desc = '[M]arkdown [P]review toggle' },
+    },
   },
   {
     'ThePrimeagen/harpoon',
@@ -982,17 +1072,16 @@ require('lazy').setup({
         harpoon.ui:toggle_quick_menu(harpoon:list())
       end, { desc = 'Harpoon: Toggle menu' })
 
-      vim.keymap.set('n', '<C-1>', function()
+      vim.keymap.set('n', '<leader>1', function()
         harpoon:list():select(1)
       end, { desc = 'Harpoon: Select file 1' })
-
-      vim.keymap.set('n', '<C-2>', function()
+      vim.keymap.set('n', '<leader>2', function()
         harpoon:list():select(2)
       end, { desc = 'Harpoon: Select file 2' })
-      vim.keymap.set('n', '<C-3>', function()
+      vim.keymap.set('n', '<leader>3', function()
         harpoon:list():select(3)
       end, { desc = 'Harpoon: Select file 3' })
-      vim.keymap.set('n', '<C-4>', function()
+      vim.keymap.set('n', '<leader>4', function()
         harpoon:list():select(4)
       end, { desc = 'Harpoon: Select file 4' })
       vim.keymap.set('n', '<C-p>', function()
