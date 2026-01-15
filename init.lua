@@ -164,6 +164,17 @@ vim.opt.cursorline = true
 -- Minimal number of screen lines to keep above and below the cursor.
 vim.opt.scrolloff = 10
 
+-- [[ Folding ]]
+-- Use treesitter for smart code folding
+vim.opt.foldmethod = 'expr'
+vim.opt.foldexpr = 'v:lua.vim.treesitter.foldexpr()'
+vim.opt.foldlevel = 99 -- Start with all folds open
+vim.opt.foldlevelstart = 99
+vim.opt.foldenable = true
+-- Don't open folds when moving with hjkl (remove 'hor' from foldopen)
+vim.opt.foldopen:remove { 'hor' }
+-- Keymaps: zc (close), zC (close all), zo (open), zO (open all) are defaults
+
 -- [[ Essential Keymaps ]] ----------------------------------------------
 vim.keymap.set('v', '<C-f>', '<ESC>')
 
