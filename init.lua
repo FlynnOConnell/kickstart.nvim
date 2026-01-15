@@ -676,7 +676,7 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
-        -- ruff installed via 'uv tool install ruff' (not Mason)
+        'ruff',   -- Python linter + formatter
         'markdownlint',
         'matlab-language-server',
         'prettier',
