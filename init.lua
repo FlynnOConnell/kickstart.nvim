@@ -637,8 +637,7 @@ require('lazy').setup({
       local servers = {
         -- clangd = {},
         -- gopls = {},
-        -- Using ruff for Python linting/formatting (replaces pyright, flake8, black)
-        ruff = {},
+        -- ruff is configured manually below (not via Mason)
         rust_analyzer = {
           settings = {
             ['rust-analyzer'] = {
@@ -704,6 +703,12 @@ require('lazy').setup({
             require('lspconfig')[server_name].setup(server)
           end,
         },
+      }
+
+      -- Configure ruff LSP manually (installed via: uv tool install ruff)
+      -- ruff server provides linting, formatting, and some LSP features for Python
+      require('lspconfig').ruff.setup {
+        capabilities = capabilities,
       }
     end,
   },
