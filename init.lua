@@ -212,11 +212,11 @@ vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
 vim.keymap.set('n', 'gp', function()
-  vim.diagnostic.jump { count = -1, float = true } { desc = 'Go to previous [D]iagnostic message' }
-end)
+  vim.diagnostic.jump { count = -1, float = true }
+end, { desc = 'Go to previous [D]iagnostic message' })
 vim.keymap.set('n', 'gn', function()
-  vim.diagnostic.jump { count = 1, float = true } { desc = 'Go to next [D]iagnostic message' }
-end)
+  vim.diagnostic.jump { count = 1, float = true }
+end, { desc = 'Go to next [D]iagnostic message' })
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
 vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
 
