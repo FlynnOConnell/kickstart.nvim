@@ -705,10 +705,22 @@ require('lazy').setup({
         },
       }
 
-      -- Configure ruff LSP manually (installed via: uv tool install ruff)
-      -- ruff server provides linting, formatting, and some LSP features for Python
+      -- Configure Python tools manually (installed via uv, not Mason)
+      -- Install with: uv tool install ruff ty
+
+      -- ruff: linting and formatting
       require('lspconfig').ruff.setup {
         capabilities = capabilities,
+      }
+
+      -- ty: full Python language server (go to definition, completions, hover, etc.)
+      require('lspconfig').ty.setup {
+        capabilities = capabilities,
+        settings = {
+          ty = {
+            -- ty settings go here if needed
+          },
+        },
       }
     end,
   },
