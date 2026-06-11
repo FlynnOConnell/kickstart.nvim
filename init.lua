@@ -649,14 +649,8 @@ require('lazy').setup({
         -- clangd = {},
         -- gopls = {},
         -- ruff is configured manually below (not via Mason)
-        rust_analyzer = {
-          settings = {
-            ['rust-analyzer'] = {
-              checkOnSave = { command = 'clippy' },
-              files = { excludeDirs = { '.venv', 'node_modules' } },
-            },
-          },
-        },
+        -- rust_analyzer removed: no rust development on the cluster, and it errors
+        -- when it attaches without a rust toolchain installed.
         -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
         --
         -- Some languages (like typescript) have entire language plugins that can be useful:
@@ -695,11 +689,10 @@ require('lazy').setup({
       local ensure_installed = vim.tbl_keys(servers or {})
       vim.list_extend(ensure_installed, {
         'stylua', -- Used to format Lua code
-        -- ruff is installed via uv: uv tool install ruff
-        'markdownlint',
-        'matlab-language-server',
-        'prettier',
-        'rust-analyzer',
+        -- ruff/ty are installed via uv (not Mason).
+        -- markdownlint / prettier / matlab-language-server are npm tools and need
+        -- node; omitted so Mason doesn't fail on the cluster. Add them back after
+        -- `module load nodejs` if you want them.
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -771,7 +764,7 @@ require('lazy').setup({
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        python = { 'flake8', 'black' },
+        python = { 'ruff_format' },
         javascript = { 'prettierd', 'prettier' },
       },
       stop_after_first_successful = true,
