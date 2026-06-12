@@ -785,7 +785,6 @@ require('lazy').setup({
       formatters_by_ft = {
         lua = { 'stylua' },
         python = { 'ruff_format' },
-        javascript = { 'prettierd', 'prettier' },
       },
       stop_after_first_successful = true,
     },
@@ -1025,6 +1024,8 @@ require('lazy').setup({
   -- the shared config dir is read-only for users, so keep lazy's lockfile in the
   -- per-user data dir (otherwise lazy errors: lazy-lock.json: Permission denied)
   lockfile = vim.fn.stdpath('data') .. '/lazy-lock.json',
+  -- no plugin here needs luarocks; skip hererocks setup (avoids the error + delay)
+  rocks = { enabled = false },
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
     -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
