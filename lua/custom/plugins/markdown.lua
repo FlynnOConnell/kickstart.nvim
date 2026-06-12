@@ -2,8 +2,10 @@
 local vault_path = vim.fn.expand '~/repos/docs'
 local video_extensions = { 'mp4', 'webm', 'mov', 'avi' }
 
--- Make wrap_python globally accessible
-_G.wrap_python_codeblock = function()
+local M = {}
+
+--- wrap the visual selection in a ```python code block
+function M.wrap_python()
   local start_line = vim.fn.line "'<"
   local end_line = vim.fn.line "'>"
   vim.api.nvim_buf_set_lines(0, end_line, end_line, false, { '```' })
@@ -56,7 +58,7 @@ function M.smart_paste()
   end
 end
 
-M.spec = {
+return {
   {
     'HakonHarnes/img-clip.nvim',
     event = 'VeryLazy',
@@ -75,8 +77,8 @@ M.spec = {
     },
     keys = {
       { '<leader>P', '<cmd>PasteImage<cr>', desc = '[P]aste image from clipboard' },
-      { '<leader>V', function() require('custom.plugins.markdown').smart_paste() end, desc = 'Paste image or [V]ideo from clipboard' },
-      { '<leader>C', "<esc><cmd>lua require('custom.plugins.markdown').wrap_python()<cr>", desc = 'Wrap in python [C]ode block', mode = 'v' },
+      { '<leader>V', function() M.smart_paste() end, desc = 'Paste image or [V]ideo from clipboard' },
+      { '<leader>C', function() M.wrap_python() end, desc = 'Wrap in python [C]ode block', mode = 'v' },
     },
   },
 }

@@ -1022,6 +1022,9 @@ require('lazy').setup({
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   { import = 'custom.plugins' },
 }, {
+  -- the shared config dir is read-only for users, so keep lazy's lockfile in the
+  -- per-user data dir (otherwise lazy errors: lazy-lock.json: Permission denied)
+  lockfile = vim.fn.stdpath('data') .. '/lazy-lock.json',
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
     -- default lazy.nvim defined Nerd Font icons, otherwise define a unicode icons table
