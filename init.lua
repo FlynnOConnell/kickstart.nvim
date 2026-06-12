@@ -85,6 +85,9 @@ P.S. You can delete this when you're done too. It's your config now! :)
 --]]
 
 -- Set <space> as the leader key
+-- byte-compiled lua module cache — big startup win, especially on slow filesystems
+vim.loader.enable()
+
 -- See `:help mapleader`
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
@@ -714,7 +717,7 @@ require('lazy').setup({
         -- node; omitted so Mason doesn't fail on the cluster. Add them back after
         -- `module load nodejs` if you want them.
       })
-      require('mason-tool-installer').setup { ensure_installed = ensure_installed }
+      require('mason-tool-installer').setup { ensure_installed = ensure_installed, run_on_start = false }
 
       require('mason-lspconfig').setup {
         handlers = {
@@ -742,18 +745,22 @@ require('lazy').setup({
       })
       vim.lsp.enable('ruff')
 
-      -- ty: full Python language server (go to definition, completions, hover, etc.)
-      vim.lsp.config('ty', {
-        cmd = { 'ty', 'server' },
-        filetypes = { 'python' },
-        root_markers = { 'pyproject.toml', 'ty.toml', '.git' },
-        capabilities = capabilities,
-        offset_encoding = 'utf-16',
-        settings = {
-          ty = {},
-        },
-      })
-      vim.lsp.enable('ty')
+      -- ty: full Python language server (go to definition, completions, hover).
+      -- On by default; set `vim.g.enable_ty = false` to disable (e.g. if it is slow
+      -- indexing a huge .venv over lustre).
+      if vim.g.enable_ty ~= false then
+        vim.lsp.config('ty', {
+          cmd = { 'ty', 'server' },
+          filetypes = { 'python' },
+          root_markers = { 'pyproject.toml', 'ty.toml', '.git' },
+          capabilities = capabilities,
+          offset_encoding = 'utf-16',
+          settings = {
+            ty = {},
+          },
+        })
+        vim.lsp.enable('ty')
+      end
     end,
   },
 
@@ -952,11 +959,11 @@ require('lazy').setup({
       -- Prefer git instead of curl in order to improve connectivity in some environments
       require('nvim-treesitter.install').prefer_git = true
 
-      -- Install parsers (new API doesn't use ensure_installed in opts)
+      -- Install missing parsers. Check the parser file on disk instead of
+      -- vim.treesitter.language.inspect(), which loads every parser at startup.
       local parsers = { 'bash', 'c', 'diff', 'html', 'lua', 'luadoc', 'markdown', 'vim', 'vimdoc', 'python' }
       for _, parser in ipairs(parsers) do
-        local ok, _ = pcall(vim.treesitter.language.inspect, parser)
-        if not ok then
+        if #vim.api.nvim_get_runtime_file('parser/' .. parser .. '.so', false) == 0 then
           vim.cmd('TSInstall ' .. parser)
         end
       end
