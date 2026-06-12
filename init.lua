@@ -93,6 +93,11 @@ vim.g.maplocalleader = ' '
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
+-- no perl/ruby/node host on the cluster; disable to skip provider checks
+vim.g.loaded_perl_provider = 0
+vim.g.loaded_ruby_provider = 0
+vim.g.loaded_node_provider = 0
+
 -- Add ~/.local/bin to PATH for uv-installed tools (ruff, etc.)
 -- This works cross-platform (Windows, macOS, Linux)
 local home = vim.fn.expand('~')
@@ -124,6 +129,21 @@ vim.opt.showmode = false
 --  Remove this option if you want your OS clipboard to remain independent.
 --  See `:help 'clipboard'`
 vim.opt.clipboard = 'unnamedplus'
+
+-- Over SSH (HPC) there is no xclip/xsel, so route copies through the terminal
+-- with OSC 52 (kitty/wezterm carry them to your local clipboard). Paste reads the
+-- unnamed register so it never blocks waiting on a terminal response.
+if vim.env.SSH_TTY then
+  local osc52 = require('vim.ui.clipboard.osc52')
+  local function paste()
+    return vim.fn.split(vim.fn.getreg(''), '\n')
+  end
+  vim.g.clipboard = {
+    name = 'OSC 52',
+    copy = { ['+'] = osc52.copy('+'), ['*'] = osc52.copy('*') },
+    paste = { ['+'] = paste, ['*'] = paste },
+  }
+end
 
 -- Enable break indent
 vim.opt.breakindent = true
